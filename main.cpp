@@ -33,7 +33,7 @@ int main ( int argc, char **argv	) {
 	read_cnf(in);		
 	in.close();
 	P.print_cnf();
-   
+   P.do_parallel_preprocessing();
 	return 0;
 }
 

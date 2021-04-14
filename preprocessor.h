@@ -111,8 +111,8 @@ class Preprocessor {
    int num_vars;
 
    //* hyper-parameter TODO: decide mu's valuse
-   int mu;
-
+   int mu = 11;
+   int cutoffpoint;
  
 
    
@@ -147,6 +147,13 @@ public:
       cnf->print_cnf();
    }
    void add_clause(Clause* c, int index);
+
+   void do_parallel_preprocessing();
+
+   //* DEBUGGING helper methods
+   void print_authorized_caldidates_array();
+   void print_scores_array();
+   void print_histogram_array();
 };
 
 // Preprocessor P;
