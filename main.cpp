@@ -37,7 +37,6 @@ int main ( int argc, char **argv	) {
 	return 0;
 }
 
-
 //* parsing code 
 
 void skipLine(ifstream& in) {
@@ -88,6 +87,7 @@ void read_cnf(ifstream& in) {
 	P.getCnf()->setNumClauses(clauses);
 	P.getCnf()->setNumVars(vars);
 	P.setNumVars(vars);
+	P.setNumClauses(clauses);
 	// set_nvars(vars);
 	// set_nclauses(clauses);
 	initialize();

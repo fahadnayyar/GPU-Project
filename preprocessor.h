@@ -4,6 +4,7 @@
 #include <string.h>
 #include <set>
 #include <sstream>
+#include <vector>
 
 using namespace std;
 
@@ -21,7 +22,7 @@ class Clause {
 
    //* pointer to array of literals of this clause
    //* TODO: make literal_array private
-   Lit * literal_array;
+   int * literal_array;
    int num_lits; 
 
 public:  
@@ -42,34 +43,55 @@ public:
    void initializeArray() { literal_array = new int[num_lits]; }
 };
 
-// class OccurList {
+class OccurList {
    
-//    //*
-//    int * clause_index_array;
-//    int occur_list_size;
+   //*
+   int * clause_index_array;
+   int occur_list_size = 0;
+   int tail = 0;
 
-// public:
+public:
    
-//    // get_occur_list_size() {
+   void addClause(int i) {
+      clause_index_array[tail] = i;
+      tail += 1;   
+   }
+   int getClauseIndex(int i) {
+      return clause_index_array[i];
+   }
+   void initializeArray() {
+      clause_index_array = new int[occur_list_size];
+   }
+   int getOccurListSize() {
+      return occur_list_size;
+   }
+   void setOccurListSize(int s) {
+      occur_list_size = s;
+   }
 
-//    // }
-//    // set_occur_list_size() {
+};
 
-//    // }
-
-// };
-
-// /* OccurTab: provides interface to efficiently iterate over all clauses containing a particular literal. 
-//  * occurTAB instances can be constructed in parallel.
-//  */
-// class OccurTab {
+/* OccurTab: provides interface to efficiently iterate over all clauses containing a particular literal. 
+ * occurTAB instances can be constructed in parallel.
+ */
+class OccurTab {
    
-//    //* pointer to array of occurList
-//    OccurList * occur_list_array;
+   //* pointer to array of occurList
+   OccurList * occur_list_array;
+   int num_lits;
 
-// public:
+public:
+   
+   void initializeArray() {
+      occur_list_array = new OccurList[num_lits+1];
+   }
+   void setNumLits(int s){ num_lits = s;}
+   int getNumLits(){ return num_lits; }
+   OccurList& getOccurList(int i) {
+      return occur_list_array[i];
+   }
 
-// };
+};
 
 //* stores the input CNF formula
 class Cnf {
@@ -83,6 +105,7 @@ class Cnf {
 
 public:
    Cnf()  {};
+   
    void print_cnf(){
       for(int i=0; i<num_clauses; i++){
          cout << "Clause no : " << i << " \nClause: ";
@@ -90,7 +113,6 @@ public:
       }
    }
    
-
    void setNumClauses(int s){ num_clauses = s;}
    int getNumClauses(){ return num_clauses; }
    void setNumVars(int s){ num_vars = s;}
@@ -108,7 +130,9 @@ class Preprocessor {
 
    //* input
    Cnf * cnf; // Not null after constructor.
+   OccurTab * occur_table; // Null after constructor
    int num_vars;
+   int num_clauses;
 
    //* hyper-parameter TODO: decide mu's valuse
    int mu = 11;
@@ -124,8 +148,17 @@ public:
    int * authorized_caldidates_array; // Not after constructor.
    int * histogram_array; // Not after constructor.
    int * scores_array; // Not after constructor.
-  
-  
+   vector <int> elected_candidates_vector;
+
+   void append_electd_candidate(int var) {
+      elected_candidates_vector.push_back(var);
+   }
+    
+
+   void createOccurTable();
+   void setNumClauses(int s){ num_clauses = s; }
+   int getNumClauses(){ return num_clauses; }
+
    //* TODO: put algo related functions in private and make a wrapper in public
    
    //* Algorithm 1 functions
@@ -135,6 +168,8 @@ public:
    void sort_authorized_caldidates_according_to_scores();
    void prune();
 
+   //* Algorithm 2 functions
+   void LCVE_algorithm();
 
    void setNumVars(int s){ num_vars = s;}
    int getNumVars(){ return num_vars; }
@@ -154,6 +189,9 @@ public:
    void print_authorized_caldidates_array();
    void print_scores_array();
    void print_histogram_array();
+   void print_occur_table();
+   void print_elected_candidates_vector();
+
 };
 
 // Preprocessor P;
