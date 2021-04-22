@@ -33,31 +33,49 @@ void Preprocessor::constructAGPU() {
 }
 
 void Preprocessor::initialize_hisotgram_array() { 
-   //* CPU sequrntial histogram computation.
-   histogram_array = new int[2*num_vars+1];
-   for(int j=0; j<2*num_vars+1; j++) {
-        histogram_array[j]=0;
-   }
-   for(int i=0; i<cnf->getNumClauses(); i++) {
-       Clause c = cnf->getClause(i);
-       for(int j=0; j<c.getNumLits(); j++) {
-           histogram_array[c.getLit(j)]++;
-       }
+   //* CPU sequential histogram computation.
+   if (mode==0) {
+      histogram_array = new int[2*num_vars+1];
+      for(int j=0; j<2*num_vars+1; j++) {
+         histogram_array[j]=0;
+      }
+      for(int i=0; i<cnf->getNumClauses(); i++) {
+         Clause c = cnf->getClause(i);
+         for(int j=0; j<c.getNumLits(); j++) {
+            histogram_array[c.getLit(j)]++;
+         }
+      }
+      
+   } else if (mode==1) { //* GPU parallel histogram computation.
+      //* TODO: complete.
+   } else {
+      cout << "ERROR: invalid mode in initialize_hisotgram_array()\n";
+      exit(0);
    }
    cout << "DEBUGGING: initialize_hisotgram_array finished.\n" << endl;
    print_histogram_array();
 }
 
 void Preprocessor::assign_scores() {
-   //* TODO: imp: initialize authorized_caldidates_array
+   
+   //* initializing authorized_caldidates_array and scores_array
    authorized_caldidates_array = new int[num_vars+1];
    scores_array = new int[num_vars+1];
    
-   //* executiig parallel assign_scores_kernel
-   run_assign_scores_kernel ( authorized_caldidates_array, histogram_array, scores_array, num_vars );
+   if (mode==1) {
+      //* executiig GPU parallel assign_scores_kernel
+      run_assign_scores_kernel ( authorized_caldidates_array, histogram_array, scores_array, num_vars );
+   } else if (mode==0) { //* GPU parallel histogram computation.
+      //* TODO: complete.
+   } else { //* CPU sequential implementation of assign_scores
+      cout << "ERROR: invalid mode in iassign_scores()\n";
+      exit(0);
+   }
+  
    cout << "DEBUGGING: run_assign_scores_kernel finished.\n" << endl;
    print_authorized_caldidates_array();
    print_scores_array();
+      
 }
 
 bool compareScores(pair<int, int> i1, pair<int, int> i2)
@@ -66,23 +84,27 @@ bool compareScores(pair<int, int> i1, pair<int, int> i2)
 }
 
 void Preprocessor::sort_authorized_caldidates_according_to_scores() {
-   pair<int, char> pairt[num_vars];
-
-   for (int i = 1; i < num_vars + 1; i++) 
-   {
-      pairt[i-1].first = authorized_caldidates_array[i];
-      pairt[i-1].second = scores_array[i];
+   
+   if (mode==0) { //* CPU sequential sorting of authorized_caldidates
+      pair<int, char> pairt[num_vars];
+      for (int i = 1; i < num_vars + 1; i++) {
+         pairt[i-1].first = authorized_caldidates_array[i];
+         pairt[i-1].second = scores_array[i];
+      }
+      // Sorting the pair array.
+      sort(pairt, pairt + num_vars, compareScores);
+      // Modifying original arrays
+      for (int i = 1; i < num_vars + 1; i++) {
+         authorized_caldidates_array[i] = pairt[i-1].first;
+         scores_array[i] = pairt[i-1].second;
+      }
+   } else if (mode==1) { //* GPU parallel sorting of authorized_caldidates
+      //* TODO: complete
+   } else {
+      cout << "ERROR: invalid mode in iassign_scores()\n";
+      exit(0);
    }
 
-   // Sorting the pair array.
-   sort(pairt, pairt + num_vars, compareScores);
-
-   // Modifying original arrays
-   for (int i = 1; i < num_vars + 1; i++) 
-   {
-      authorized_caldidates_array[i] = pairt[i-1].first;
-      scores_array[i] = pairt[i-1].second;
-   }
    cout << "DEBUGGING: sort_authorized_caldidates_according_to_scores finished.\n" << endl;
    print_authorized_caldidates_array();
    print_scores_array();
@@ -90,6 +112,7 @@ void Preprocessor::sort_authorized_caldidates_according_to_scores() {
 }
 
 void Preprocessor::prune() {
+   //* No need to parallleize as O(logn) TODO: rethink this decision
    int x = mu;
    int * elem = upper_bound(scores_array + 1, scores_array + num_vars + 1, x);
    cout << "* elem: " << *elem << "\n";

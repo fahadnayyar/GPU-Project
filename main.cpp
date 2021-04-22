@@ -27,6 +27,14 @@ Preprocessor P;
 
 int main ( int argc, char **argv	) {
    //* parsing code copied from EDUSAT (our base SAT solver)
+	char * mode = getenv ( "MODE" );
+	if(mode == NULL){
+		P.setMode(0);
+	}
+	else{
+		int mode_int = atoi( mode );
+		P.setMode(mode_int);
+	}
    begin_time = cpuTime();
 	ifstream in (argv[argc - 1]);
 	if (!in.good()) Abort("cannot read input file", 1);	

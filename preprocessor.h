@@ -137,7 +137,7 @@ class Preprocessor {
    //* hyper-parameter TODO: decide mu's valuse
    int mu = 11;
    int cutoffpoint;
- 
+   int mode = 0;
 
    
 public:
@@ -154,7 +154,8 @@ public:
       elected_candidates_vector.push_back(var);
    }
     
-
+   void setMode(int s){ mode = s; }
+   int getMode(){ return mode; }
    void createOccurTable();
    void setNumClauses(int s){ num_clauses = s; }
    int getNumClauses(){ return num_clauses; }
