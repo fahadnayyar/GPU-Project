@@ -34,8 +34,9 @@ void Preprocessor::constructAGPU() {
 
 void Preprocessor::initialize_hisotgram_array() { 
    //* CPU sequential histogram computation.
+   histogram_array = new int[2*num_vars+1];
+
    if (mode==0) {
-      histogram_array = new int[2*num_vars+1];
       for(int j=0; j<2*num_vars+1; j++) {
          histogram_array[j]=0;
       }
@@ -47,7 +48,7 @@ void Preprocessor::initialize_hisotgram_array() {
       }
       
    } else if (mode==1) { //* GPU parallel histogram computation.
-      //* TODO: complete.
+      run_create_histogram_array_kernel();
    } else {
       cout << "ERROR: invalid mode in initialize_hisotgram_array()\n";
       exit(0);
@@ -67,6 +68,17 @@ void Preprocessor::assign_scores() {
       run_assign_scores_kernel ( authorized_caldidates_array, histogram_array, scores_array, num_vars );
    } else if (mode==0) { //* GPU parallel histogram computation.
       //* TODO: complete.
+      for (int i=0; i<num_vars; i++) {
+         int x = i+1;
+         authorized_caldidates_array[x] = x;
+         int h_x_p = histogram_array[2*x];
+         int h_x_n = histogram_array[2*x-1];
+         if (  h_x_p == 0 || h_x_n == 0 ) {
+            scores_array[x] = max(h_x_p, h_x_n);
+         } else {
+            scores_array[x] = h_x_p * h_x_n;
+         }
+      }
    } else { //* CPU sequential implementation of assign_scores
       cout << "ERROR: invalid mode in iassign_scores()\n";
       exit(0);
@@ -78,8 +90,7 @@ void Preprocessor::assign_scores() {
       
 }
 
-bool compareScores(pair<int, int> i1, pair<int, int> i2)
-{
+bool compareScores(pair<int, int> i1, pair<int, int> i2) {
     return (i1.second < i2.second);
 }
 
@@ -99,7 +110,7 @@ void Preprocessor::sort_authorized_caldidates_according_to_scores() {
          scores_array[i] = pairt[i-1].second;
       }
    } else if (mode==1) { //* GPU parallel sorting of authorized_caldidates
-      //* TODO: complete
+      run_sort_wrt_scores_kernel();
    } else {
       cout << "ERROR: invalid mode in iassign_scores()\n";
       exit(0);

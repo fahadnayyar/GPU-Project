@@ -41,6 +41,7 @@ public:
    int getLit(int index) { return literal_array[index]; }
    void setLit(int index, int val) { literal_array[index] = val; }
    void initializeArray() { literal_array = new int[num_lits]; }
+   int * getClauseAsArray() {return literal_array;}
 };
 
 class OccurList {
@@ -153,7 +154,10 @@ public:
    void append_electd_candidate(int var) {
       elected_candidates_vector.push_back(var);
    }
-    
+   
+   void run_create_histogram_array_kernel();
+   void run_sort_wrt_scores_kernel();
+   
    void setMode(int s){ mode = s; }
    int getMode(){ return mode; }
    void createOccurTable();
