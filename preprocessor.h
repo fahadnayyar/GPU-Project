@@ -149,6 +149,7 @@ public:
    int * authorized_caldidates_array; // Not after constructor.
    int * histogram_array; // Not after constructor.
    int * scores_array; // Not after constructor.
+   bool * eliminated_array;
    vector <int> elected_candidates_vector;
 
    void append_electd_candidate(int var) {

@@ -231,6 +231,66 @@ void Preprocessor::createOccurTable() {
 
 }
 
+void Preprocessor::BVIPE_algorithm(){
+   eliminated_array = new bool[getNumVars()];
+   for(auto var :elected_candidates_vector){
+      eliminated_array[var] = 0;
+      numTautologies = 0;
+      int index_p = 2*var;
+      int index_n = 2*var-1; 
+      if(histogram_array[index_p] = 1 || histogram_array[index_n] = 1){
+
+      }
+      else{
+
+      }
+   }
+}
+
+void Preprocessor::Resolve(int x){
+   int index_p = 2*x;
+   int index_n = 2*x-1;
+   OccurList& occur_list_p = occur_table->getOccurList(index_p);
+   OccurList& occur_list_n = occur_table->getOccurList(index_n);
+   vector< Clause *> resolvents;
+   for(int i=0; i< occur_list_p.getOccurListSize(); i++ ){
+      for(int j=0; j< occur_list_n.getOccurListSize(); j++ ){
+         int c1_ind = occur_list_p.getClauseIndex(i);
+         int c2_ind = occur_list_n.getClauseIndex(j);
+         Clause& c1 = cnf->getClause(c1_ind);
+         Clause& c2 = cnf->getClause(c2_ind);
+         set < int > newClause;
+         for(int k=0; k<c1.getNumLits(); k++){
+            newClause.add(c1.getLit(k));
+         }
+         for(int k=0; k<c2.getNumLits(); k++){
+            newClause.add(c2.getLit(k));
+         }
+         if(!isTautology(newClause)){
+            Clause* c = new Clause();
+            c->setNumLits(c1.getNumLits() + c2.getNumLits() - 2);
+            int k=0;
+            for(auto lit: newClause){
+               c->setLit(k, lit);
+               k++;
+            }
+            resolvents.add(c);
+         }
+      }
+   }
+}
+
+bool Preprocessor::IsTautology(set<int> Clause){
+   int prev = 0;
+   for(auto it=Clause.begin(); it!=Clause.end(); it++){
+      if(prev!=0 && prev%2==1 && prev + 1 ==*it){
+         return true;
+      }
+      prev = *it;
+   }
+   return false;
+}
+
 
 void Clause::print_clause() {
    for(int i=0; i< num_lits; i++){
