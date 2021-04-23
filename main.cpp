@@ -58,14 +58,14 @@ int main ( int argc, char **argv	) {
 			struct timespec start_cpu, end_cpu;
 			float msecs_cpu;
 			clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_cpu);
-		#else
-			cout<<"done.\n"<<flush;
 		#endif
-		P.do_parallel_preprocessing();
+				P.do_parallel_preprocessing();
 		#ifdef ENABLE_TIMER
 			clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_cpu);
 			msecs_cpu = 1000.0 * (end_cpu.tv_sec - start_cpu.tv_sec) + (end_cpu.tv_nsec - start_cpu.tv_nsec)/1000000.0;
-			cout<<"done in "<<msecs_cpu<<" milliseconds.\n"<<flush;
+			cout<<"CPU sequential sat simplification done in "<<msecs_cpu<<" milliseconds.\n"<<flush;
+		#else
+			cout<<"CPU sequential sat simplification done.\n"<<flush;
 		#endif
 	}else if (P.getMode()==1){
 		#ifdef ENABLE_TIMER
@@ -75,21 +75,18 @@ int main ( int argc, char **argv	) {
 			cudaEventCreate(&end_gpu);
 			cudaEventRecord(start_gpu, 0);
 		#endif
-		P.do_parallel_preprocessing();
+				P.do_parallel_preprocessing();
 		#ifdef ENABLE_TIMER
 			cudaEventRecord(end_gpu, 0);
 			cudaEventSynchronize(end_gpu);
 			cudaEventElapsedTime(&msecs_gpu, start_gpu, end_gpu);
 			cudaEventDestroy(start_gpu);
 			cudaEventDestroy(end_gpu);
-			cout<<"done in "<<msecs_gpu<<" milliseconds.\n";
+			cout<<"GPU parallel sat simplification done in "<<msecs_gpu<<" milliseconds.\n";
 		#else
-			cout<<"done.\n"<<flush;
+			cout<<"GPU parallel sat simplification done.\n"<<flush;
 		#endif
 	}
-	
-
-	
 	
 	return 0;
 }

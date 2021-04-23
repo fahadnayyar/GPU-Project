@@ -16,6 +16,7 @@ unsat_dir = pwd_str+"test/unsat/"
 for cnf_file in os.listdir(sat_dir):
    if cnf_file.endswith(".cnf"):
       cnf_file_path = sat_dir+cnf_file
+      print("running preprocessing on : " + cnf_file_path)
       os.environ['MODE'] = str(0)
       cmd = pwd_str+"preprocessor " + cnf_file_path
       execute_command(cmd)
@@ -28,6 +29,7 @@ for cnf_file in os.listdir(sat_dir):
 for cnf_file in os.listdir(unsat_dir):
    if cnf_file.endswith(".cnf"):
       cnf_file_path = sat_dir+cnf_file
+      print("running preprocessing on : " + cnf_file_path)
       os.environ['MODE'] = str(0)
       cmd = pwd_str+"preprocessor " + cnf_file_path
       execute_command(cmd)

@@ -12,6 +12,7 @@
 #include <thrust/iterator/counting_iterator.h>
 #include "histogram.cu"
 
+
 //* 1st version of kernel
 __global__ void assign_scores_kernel ( int * d_authorized_caldidates_array, 
    int * d_histogram_array, int * d_scores_array, int num_vars ) {
@@ -62,10 +63,23 @@ extern "C" void run_assign_scores_kernel ( int * authorized_caldidates_array,
    //* TODO: fix num_blocks, it is too huge right now (millions of vars are possible)
    int num_blocks = ceil( ((double)num_vars) / ((double)256));
    int block_size = 256;
-   assign_scores_kernel <<< num_blocks, block_size >>> ( d_authorized_caldidates_array, 
-      d_histogram_array, d_scores_array, num_vars );
+   
 
-   cudaDeviceSynchronize();
+   cudaEvent_t start_gpu_1, end_gpu_1;
+   float msecs_gpu_1;
+   cudaEventCreate(&start_gpu_1);
+   cudaEventCreate(&end_gpu_1);
+   cudaEventRecord(start_gpu_1, 0);
+      assign_scores_kernel <<< num_blocks, block_size >>> ( d_authorized_caldidates_array, 
+         d_histogram_array, d_scores_array, num_vars );
+      cudaDeviceSynchronize();
+   cudaEventRecord(end_gpu_1, 0);
+   cudaEventSynchronize(end_gpu_1);
+   cudaEventElapsedTime(&msecs_gpu_1, start_gpu_1, end_gpu_1);
+   cudaEventDestroy(start_gpu_1);
+   cudaEventDestroy(end_gpu_1);
+   std::cout<<"\nassign_scores_kernel done in "<<msecs_gpu_1<<" milliseconds.\n";
+
 
    cudaMemcpy ( (void*) authorized_caldidates_array, 
       (void*) d_authorized_caldidates_array, 
@@ -79,20 +93,42 @@ extern "C" void run_assign_scores_kernel ( int * authorized_caldidates_array,
 
 void Preprocessor::run_create_histogram_array_kernel() {
   
-   thrust::device_vector<int> final_histogram;
-   final_histogram.resize(2*num_vars+1);      
-   for(int i=0; i<cnf->getNumClauses(); i++) {
-      Clause c = cnf->getClause(i);
-      thrust::device_vector<int> input_array( c.getClauseAsArray(), c.getClauseAsArray() + c.getNumLits());
-      thrust::device_vector<int> histogram;
-      histogram.resize(2*num_vars+1);
-      dense_histogram(input_array, histogram);
-      thrust::transform(histogram.begin(), histogram.end(), final_histogram.begin(), final_histogram.begin(), thrust::plus<int>());
-   }
-   thrust::copy(final_histogram.begin(), final_histogram.end(), histogram_array);
+   cudaEvent_t start_gpu_1, end_gpu_1;
+   float msecs_gpu_1;
+   cudaEventCreate(&start_gpu_1);
+   cudaEventCreate(&end_gpu_1);
+   cudaEventRecord(start_gpu_1, 0);
+         thrust::device_vector<int> final_histogram;
+         final_histogram.resize(2*num_vars+1);      
+         for(int i=0; i<cnf->getNumClauses(); i++) {
+            Clause c = cnf->getClause(i);
+            thrust::device_vector<int> input_array( c.getClauseAsArray(), c.getClauseAsArray() + c.getNumLits());
+            thrust::device_vector<int> histogram;
+            histogram.resize(2*num_vars+1);
+            dense_histogram(input_array, histogram);
+            thrust::transform(histogram.begin(), histogram.end(), final_histogram.begin(), final_histogram.begin(), thrust::plus<int>());
+         }
+         thrust::copy(final_histogram.begin(), final_histogram.end(), histogram_array);
+   cudaEventRecord(end_gpu_1, 0);
+   cudaEventSynchronize(end_gpu_1);
+   cudaEventElapsedTime(&msecs_gpu_1, start_gpu_1, end_gpu_1);
+   cudaEventDestroy(start_gpu_1);
+   cudaEventDestroy(end_gpu_1);
+   std::cout<<"\nrun_create_histogram_array_kernel done in "<<msecs_gpu_1<<" milliseconds.\n";
 
 }
 
 void Preprocessor::run_sort_wrt_scores_kernel(){
-   thrust::sort_by_key(scores_array + 1, scores_array + num_vars + 1, authorized_caldidates_array + 1);
+   cudaEvent_t start_gpu_1, end_gpu_1;
+   float msecs_gpu_1;
+   cudaEventCreate(&start_gpu_1);
+   cudaEventCreate(&end_gpu_1);
+   cudaEventRecord(start_gpu_1, 0);
+         thrust::sort_by_key(scores_array + 1, scores_array + num_vars + 1, authorized_caldidates_array + 1);
+   cudaEventRecord(end_gpu_1, 0);
+   cudaEventSynchronize(end_gpu_1);
+   cudaEventElapsedTime(&msecs_gpu_1, start_gpu_1, end_gpu_1);
+   cudaEventDestroy(start_gpu_1);
+   cudaEventDestroy(end_gpu_1);
+   std::cout<<"\nrun_sort_wrt_scores_kernel done in "<<msecs_gpu_1<<" milliseconds.\n";
 }
