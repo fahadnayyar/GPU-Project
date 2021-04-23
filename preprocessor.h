@@ -9,7 +9,7 @@
 using namespace std;
 
 //* main data structures file
-#define DEBUG
+// #define DEBUG
 
 
 

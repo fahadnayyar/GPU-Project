@@ -35,12 +35,22 @@ int main ( int argc, char **argv	) {
 		int mode_int = atoi( mode );
 		P.setMode(mode_int);
 	}
+	if (P.getMode()==0){
+		cout << "running the sequential CPU implementation of variable elimination\n";
+	}else if (P.getMode()==1){
+		cout << "running the parallel GPU implementation of variable elimination\n";
+	}else {
+		exit(0);
+		cout << "ERROR: invalid mode\n";
+	}
    begin_time = cpuTime();
 	ifstream in (argv[argc - 1]);
 	if (!in.good()) Abort("cannot read input file", 1);	
 	read_cnf(in);		
 	in.close();
-	P.print_cnf();
+	#ifdef DEBUG
+		P.print_cnf();
+	#endif
    P.do_parallel_preprocessing();
 	return 0;
 }
