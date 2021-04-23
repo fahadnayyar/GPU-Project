@@ -13,6 +13,7 @@ void Preprocessor::do_parallel_preprocessing() {
    constructAGPU();  
    createOccurTable();
    LCVE_algorithm();
+   BVIPE_algorithm();
 }
 
 // * Algorithm 1
@@ -53,8 +54,11 @@ void Preprocessor::initialize_hisotgram_array() {
       cout << "ERROR: invalid mode in initialize_hisotgram_array()\n";
       exit(0);
    }
-   cout << "DEBUGGING: initialize_hisotgram_array finished.\n" << endl;
-   print_histogram_array();
+   #ifdef DEBUG
+      cout << "DEBUGGING: initialize_hisotgram_array finished.\n" << endl;
+      print_histogram_array();
+   #endif
+   
 }
 
 void Preprocessor::assign_scores() {
@@ -80,13 +84,15 @@ void Preprocessor::assign_scores() {
          }
       }
    } else { //* CPU sequential implementation of assign_scores
-      cout << "ERROR: invalid mode in iassign_scores()\n";
+      cout << "ERROR: invalid mode in aiassign_scores()\n";
       exit(0);
    }
   
-   cout << "DEBUGGING: run_assign_scores_kernel finished.\n" << endl;
-   print_authorized_caldidates_array();
-   print_scores_array();
+   #ifdef DEBUG
+      cout << "DEBUGGING: run_assign_scores_kernel finished.\n" << endl;
+      print_authorized_caldidates_array();
+      print_scores_array();
+   #endif
       
 }
 
@@ -112,13 +118,15 @@ void Preprocessor::sort_authorized_caldidates_according_to_scores() {
    } else if (mode==1) { //* GPU parallel sorting of authorized_caldidates
       run_sort_wrt_scores_kernel();
    } else {
-      cout << "ERROR: invalid mode in iassign_scores()\n";
+      cout << "ERROR: sort_authorized_caldidates_according_to_scores()\n";
       exit(0);
    }
 
-   cout << "DEBUGGING: sort_authorized_caldidates_according_to_scores finished.\n" << endl;
-   print_authorized_caldidates_array();
-   print_scores_array();
+   #ifdef DEBUG
+      cout << "DEBUGGING: sort_authorized_caldidates_according_to_scores finished.\n" << endl;
+      print_authorized_caldidates_array();
+      print_scores_array();
+   #endif
 
 }
 
@@ -126,10 +134,14 @@ void Preprocessor::prune() {
    //* No need to parallleize as O(logn) TODO: rethink this decision
    int x = mu;
    int * elem = upper_bound(scores_array + 1, scores_array + num_vars + 1, x);
-   cout << "* elem: " << *elem << "\n";
    cutoffpoint = (((int)(elem - scores_array)));
-   cout << "DEBUGGING: prune finished.\n" << endl;
-   cout << "DEBUGGING: cutoffpoint: " << cutoffpoint << "\n" << endl;
+   
+   #ifdef DEBUG
+      cout << "* elem: " << *elem << "\n";
+      cout << "DEBUGGING: prune finished.\n" << endl;
+      cout << "DEBUGGING: cutoffpoint: " << cutoffpoint << "\n" << endl;
+   #endif
+
 }
 
 
@@ -201,12 +213,15 @@ void Preprocessor::LCVE_algorithm() {
       }
    }
 
-   cout << "DEBUGGING: LCVE_algorithm finished  \n\n";
-   print_elected_candidates_vector();
+   #ifdef DEBUG
+      cout << "DEBUGGING: LCVE_algorithm finished  \n\n";
+      print_elected_candidates_vector();
+   #endif
 
 }
 
 
+//* TODO: parallelize the cureation of occur table
 void Preprocessor::createOccurTable() {
    occur_table = new OccurTab();
    occur_table->setNumLits(2*num_vars);
@@ -226,25 +241,59 @@ void Preprocessor::createOccurTable() {
          occur_table->getOccurList(lit).addClause(i);
       }
    }
-   cout << "DEBUGGING: OccurTable created  \n\n";
-   print_occur_table();
+   
+   #ifdef DEBUG
+      cout << "DEBUGGING: OccurTable created  \n\n";
+      print_occur_table();
+   #endif
 
 }
 
-void Preprocessor::BVIPE_algorithm(){
+// * Algorithm 4
+void Preprocessor::BVIPE_algorithm() {
+   
    eliminated_array = new bool[getNumVars()];
-   for(auto var :elected_candidates_vector){
-      eliminated_array[var] = 0;
-      numTautologies = 0;
-      int index_p = 2*var;
-      int index_n = 2*var-1; 
-      if(histogram_array[index_p] = 1 || histogram_array[index_n] = 1){
+   int numTautologies = 0;
+   int numResolvents = 0;
+   int numDeleted = 0;
 
+   if (mode==0) { //* CPU sequential BVIPE_algorithm
+      
+      
+      for(auto var :elected_candidates_vector) {
+         eliminated_array[var] = false;
+         numTautologies = 0;
+         int index_p = 2*var;
+         int index_n = 2*var-1; 
+         if (histogram_array[index_p] == 1 || histogram_array[index_n] == 1) {
+            Resolve(var);
+            eliminated_array[var] = true;
+         }
+         else {
+            numTautologies = TautologyLookAhead(var);
+            numResolvents = histogram_array[index_p] * histogram_array[index_n];
+            numDeleted = histogram_array[index_p] + histogram_array[index_n];
+            if(numResolvents - numTautologies < numDeleted){
+               Resolve(var);
+               eliminated_array[var] = true;
+            }
+         }
       }
-      else{
-
-      }
+   } else if (mode==1) { //* GPU parallel BVIPE_algorithm
+      //* TODO: complete
+   } else {
+      cout << "ERROR: invalid mode in BVIPE_algorithm\n";
+      exit(0);
    }
+
+   #ifdef DEBUG
+      cout << "DEBUGGING: BVIPE_algorithm finished.\n" << endl;
+      cout << "numTautologies : " << numTautologies << endl;
+      cout << "numResolvents : " << numResolvents << endl;
+      cout << "numDeleted : " << numDeleted << endl;
+      print_eliminated_array();
+   #endif
+
 }
 
 void Preprocessor::Resolve(int x){
@@ -252,7 +301,7 @@ void Preprocessor::Resolve(int x){
    int index_n = 2*x-1;
    OccurList& occur_list_p = occur_table->getOccurList(index_p);
    OccurList& occur_list_n = occur_table->getOccurList(index_n);
-   vector< Clause *> resolvents;
+   // vector< Clause *> resolvents;
    for(int i=0; i< occur_list_p.getOccurListSize(); i++ ){
       for(int j=0; j< occur_list_n.getOccurListSize(); j++ ){
          int c1_ind = occur_list_p.getClauseIndex(i);
@@ -261,12 +310,12 @@ void Preprocessor::Resolve(int x){
          Clause& c2 = cnf->getClause(c2_ind);
          set < int > newClause;
          for(int k=0; k<c1.getNumLits(); k++){
-            newClause.add(c1.getLit(k));
+            newClause.insert(c1.getLit(k));
          }
          for(int k=0; k<c2.getNumLits(); k++){
-            newClause.add(c2.getLit(k));
+            newClause.insert(c2.getLit(k));
          }
-         if(!isTautology(newClause)){
+         if(!IsTautology(newClause)){
             Clause* c = new Clause();
             c->setNumLits(c1.getNumLits() + c2.getNumLits() - 2);
             int k=0;
@@ -274,8 +323,10 @@ void Preprocessor::Resolve(int x){
                c->setLit(k, lit);
                k++;
             }
-            resolvents.add(c);
+            resolvents.push_back(c);
          }
+         c1.setDeletedFlag(true);
+         c2.setDeletedFlag(true);
       }
    }
 }
@@ -291,6 +342,37 @@ bool Preprocessor::IsTautology(set<int> Clause){
    return false;
 }
 
+int Preprocessor::TautologyLookAhead(int x){
+   int index_p = 2*x;
+   int index_n = 2*x - 1;
+   int numTautologies = 0;
+   OccurList& occur_list_p = occur_table->getOccurList(index_p);
+   OccurList& occur_list_n = occur_table->getOccurList(index_n);
+   vector< Clause *> resolvents;
+   for(int i=0; i< occur_list_p.getOccurListSize(); i++ ){
+      for(int j=0; j< occur_list_n.getOccurListSize(); j++ ){
+         int c1_ind = occur_list_p.getClauseIndex(i);
+         int c2_ind = occur_list_n.getClauseIndex(j);
+         Clause& c1 = cnf->getClause(c1_ind);
+         Clause& c2 = cnf->getClause(c2_ind);
+         set < int > newClause;
+         for(int k=0; k<c1.getNumLits(); k++){
+            newClause.insert(c1.getLit(k));
+         }
+         for(int k=0; k<c2.getNumLits(); k++){
+            newClause.insert(c2.getLit(k));
+         }
+         if(!IsTautology(newClause)){
+            numTautologies++;
+         }
+      }
+   }
+   return numTautologies;
+}
+
+
+
+//***--------------------------debug-print-functions----------------------------------------------------***
 
 void Clause::print_clause() {
    for(int i=0; i< num_lits; i++){
@@ -339,5 +421,13 @@ void Preprocessor::print_elected_candidates_vector() {
    cout << "DEBUGGING: elected_candidates_vector: \n";
    for (auto& it : elected_candidates_vector) {
       cout << it << ", \n";
-    }
+   }
+}
+
+void Preprocessor::print_eliminated_array() {
+   cout << "DEBUGGING: eliminated_array: \n";
+   for (int i=0;i<getNumVars();i++){
+      cout << eliminated_array[i] << ", \n";
+   }
+   cout << endl;
 }

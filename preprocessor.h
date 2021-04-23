@@ -9,7 +9,7 @@
 using namespace std;
 
 //* main data structures file
-
+#define DEBUG
 
 
 
@@ -24,6 +24,7 @@ class Clause {
    //* TODO: make literal_array private
    int * literal_array;
    int num_lits; 
+   bool deleted = false;
 
 public:  
    
@@ -42,6 +43,8 @@ public:
    void setLit(int index, int val) { literal_array[index] = val; }
    void initializeArray() { literal_array = new int[num_lits]; }
    int * getClauseAsArray() {return literal_array;}
+   void setDeletedFlag(bool d) { deleted = d; }
+   bool getDeletedFlag() { return deleted; }
 };
 
 class OccurList {
@@ -151,6 +154,7 @@ public:
    int * scores_array; // Not after constructor.
    bool * eliminated_array;
    vector <int> elected_candidates_vector;
+   vector< Clause * > resolvents;
 
    void append_electd_candidate(int var) {
       elected_candidates_vector.push_back(var);
@@ -177,6 +181,12 @@ public:
    //* Algorithm 2 functions
    void LCVE_algorithm();
 
+   //* Algorithm 4 functions
+   void BVIPE_algorithm();
+   void Resolve(int x);
+   bool IsTautology(set<int> Clause);
+   int TautologyLookAhead(int x);
+
    void setNumVars(int s){ num_vars = s;}
    int getNumVars(){ return num_vars; }
    // void read_cnf(ifstream& in);
@@ -197,6 +207,7 @@ public:
    void print_histogram_array();
    void print_occur_table();
    void print_elected_candidates_vector();
+   void print_eliminated_array();
 
 };
 

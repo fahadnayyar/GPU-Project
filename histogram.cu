@@ -1,3 +1,6 @@
+// REFERENCE: https://github.com/NVIDIA/thrust/blob/master/examples/histogram.cu
+// Code for histogram is copied from above reference.
+
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #include <thrust/sort.h>
