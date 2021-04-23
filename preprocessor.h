@@ -145,7 +145,7 @@ public:
    //* TODO: think: int * v/s Var * for authorized_caldidates_array
    int * authorized_caldidates_array; // Not after constructor.
    int * histogram_array; // Not after constructor.
-   int * scores_array; // Not after constructor.
+   long * scores_array; // Not after constructor.
    bool * eliminated_array;
    vector <int> elected_candidates_vector;
    vector< Clause * > resolvents;

@@ -15,7 +15,7 @@
 
 //* 1st version of kernel
 __global__ void assign_scores_kernel ( int * d_authorized_caldidates_array, 
-   int * d_histogram_array, int * d_scores_array, int num_vars ) {
+   int * d_histogram_array, long * d_scores_array, int num_vars ) {
    
    int tid = threadIdx.x + blockDim.x*blockIdx.x; 
    int stride = gridDim.x*blockDim.x;
@@ -43,11 +43,11 @@ extern "C" void run_assign_scores_kernel ( int * authorized_caldidates_array,
    
    int * d_authorized_caldidates_array;
    int * d_histogram_array;
-   int * d_scores_array;
+   long * d_scores_array;
    
    int size_of_authorized_caldidates_array = sizeof(int)*(num_vars+1);
    int size_of_histogram_array = sizeof(int)*(2*num_vars+1);
-   int size_of_scores_array = sizeof(int)*(num_vars+1);
+   int size_of_scores_array = sizeof(long)*(num_vars+1);
    
    cudaMalloc ( ( void ** ) &d_authorized_caldidates_array, 
       size_of_authorized_caldidates_array );

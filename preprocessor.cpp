@@ -6,14 +6,14 @@ using namespace std;
 extern "C" void run_assign_scores_kernel ( int * authorized_caldidates_array, 
 
 int * histogram_array, 
-int * scores_array,
+long * scores_array,
 int num_vars ); 
 
 void Preprocessor::do_parallel_preprocessing() {
    constructAGPU();  
    createOccurTable();
    LCVE_algorithm();
-   BVIPE_algorithm();
+   // BVIPE_algorithm();
 }
 
 // * Algorithm 1
@@ -37,7 +37,7 @@ void Preprocessor::initialize_hisotgram_array() {
    //* CPU sequential histogram computation.
    histogram_array = new int[2*num_vars+1];
 
-   if (mode==0) {
+   // if (mode==0) {
       for(int j=0; j<2*num_vars+1; j++) {
          histogram_array[j]=0;
       }
@@ -48,16 +48,16 @@ void Preprocessor::initialize_hisotgram_array() {
          }
       }
       
-   } else if (mode==1) { //* GPU parallel histogram computation.
-      run_create_histogram_array_kernel();
-   } else {
-      cout << "ERROR: invalid mode in initialize_hisotgram_array()\n";
-      exit(0);
-   }
-   #ifdef DEBUG
-      cout << "DEBUGGING: initialize_hisotgram_array finished.\n" << endl;
-      print_histogram_array();
-   #endif
+   // } else if (mode==1) { //* GPU parallel histogram computation.
+   //    run_create_histogram_array_kernel();
+   // } else {
+   //    cout << "ERROR: invalid mode in initialize_hisotgram_array()\n";
+   //    exit(0);
+   // }
+   // #ifdef DEBUG
+   //    cout << "DEBUGGING: initialize_hisotgram_array finished.\n" << endl;
+   //    print_histogram_array();
+   // #endif
    
 }
 
@@ -65,7 +65,7 @@ void Preprocessor::assign_scores() {
    
    //* initializing authorized_caldidates_array and scores_array
    authorized_caldidates_array = new int[num_vars+1];
-   scores_array = new int[num_vars+1];
+   scores_array = new long[num_vars+1];
    
    if (mode==1) {
       //* executiig GPU parallel assign_scores_kernel
@@ -133,8 +133,8 @@ void Preprocessor::sort_authorized_caldidates_according_to_scores() {
 void Preprocessor::prune() {
    //* No need to parallleize as O(logn) TODO: rethink this decision
    int x = mu;
-   int * elem = upper_bound(scores_array + 1, scores_array + num_vars + 1, x);
-   cutoffpoint = (((int)(elem - scores_array)));
+   long * elem = upper_bound(scores_array + 1, scores_array + num_vars + 1, x);
+   cutoffpoint = (((long)(elem - scores_array)));
    
    #ifdef DEBUG
       cout << "* elem: " << *elem << "\n";
@@ -161,11 +161,12 @@ void Preprocessor::LCVE_algorithm() {
         
         
         
-
-         for (int i=0 ;i<occur_list_p.getOccurListSize(); i++){
+         int size = occur_list_p.getOccurListSize();
+         for (int i=0 ;i<size; i++){
             int clause_index = occur_list_p.getClauseIndex(i);
             Clause& c = cnf->getClause(clause_index);     
-            for (int j=0; j<c.getNumLits(); j++) {
+            int nlits = c.getNumLits();
+            for (int j=0; j<nlits; j++) {
                int v = c.getLit(j)/2;
                if (v != x) {
                   //* TODO: optimize "v belongs to" A
@@ -185,11 +186,12 @@ void Preprocessor::LCVE_algorithm() {
          
          
 
-
-         for (int i=0 ;i<occur_list_n.getOccurListSize(); i++) {
-            int clause_index = occur_list_p.getClauseIndex(i);
+         size = occur_list_n.getOccurListSize();
+         for (int i=0 ;i<size; i++) {
+            int clause_index = occur_list_n.getClauseIndex(i);
             Clause& c = cnf->getClause(clause_index);     
-            for (int j=0; j<c.getNumLits(); j++) {
+            int nlits = c.getNumLits();
+            for (int j=0; j<nlits; j++) {
                int v = c.getLit(j)/2;
                if (v != x) {
                   //* TODO: optimize "v belongs to" A
