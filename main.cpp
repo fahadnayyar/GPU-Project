@@ -2,6 +2,8 @@
 //* TODO: add timing code in the implementation itself. Also calculate per kernel time
 
 #include "preprocessor.h"
+#include <ctime>
+#include <cuda_runtime.h>
 
 using namespace std;
 
@@ -48,7 +50,47 @@ int main ( int argc, char **argv	) {
 	#ifdef DEBUG
 		P.print_cnf();
 	#endif
-   P.do_parallel_preprocessing();
+   
+
+
+	if (P.getMode()==0){
+		#ifdef ENABLE_TIMER
+			struct timespec start_cpu, end_cpu;
+			float msecs_cpu;
+			clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_cpu);
+		#else
+			cout<<"done.\n"<<flush;
+		#endif
+		P.do_parallel_preprocessing();
+		#ifdef ENABLE_TIMER
+			clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_cpu);
+			msecs_cpu = 1000.0 * (end_cpu.tv_sec - start_cpu.tv_sec) + (end_cpu.tv_nsec - start_cpu.tv_nsec)/1000000.0;
+			cout<<"done in "<<msecs_cpu<<" milliseconds.\n"<<flush;
+		#endif
+	}else if (P.getMode()==1){
+		#ifdef ENABLE_TIMER
+			cudaEvent_t start_gpu, end_gpu;
+			float msecs_gpu;
+			cudaEventCreate(&start_gpu);
+			cudaEventCreate(&end_gpu);
+			cudaEventRecord(start_gpu, 0);
+		#endif
+		P.do_parallel_preprocessing();
+		#ifdef ENABLE_TIMER
+			cudaEventRecord(end_gpu, 0);
+			cudaEventSynchronize(end_gpu);
+			cudaEventElapsedTime(&msecs_gpu, start_gpu, end_gpu);
+			cudaEventDestroy(start_gpu);
+			cudaEventDestroy(end_gpu);
+			cout<<"done in "<<msecs_gpu<<" milliseconds.\n";
+		#else
+			cout<<"done.\n"<<flush;
+		#endif
+	}
+	
+
+	
+	
 	return 0;
 }
 
