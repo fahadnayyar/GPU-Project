@@ -87,22 +87,12 @@ void Preprocessor::run_create_histogram_array_kernel() {
       thrust::device_vector<int> histogram;
       histogram.resize(2*num_vars+1);
       dense_histogram(input_array, histogram);
-      // for(int i = 0; i < input_array.size(); i++)
-      //    std::cout << "Clause[" << i << "] = " << input_array[i] << std::endl;
-      // for(int i = 0; i < histogram.size(); i++)
-      //    std::cout << "HISTOGRAM[" << i << "] = " << histogram[i] << std::endl;
       thrust::transform(histogram.begin(), histogram.end(), final_histogram.begin(), final_histogram.begin(), thrust::plus<int>());
-      // for(int i = 0; i < final_histogram.size(); i++)
-      //    std::cout << "FINAL_HISTOGRAM[" << i << "] = " << final_histogram[i] << std::endl;
    }
    thrust::copy(final_histogram.begin(), final_histogram.end(), histogram_array);
 
 }
 
 void Preprocessor::run_sort_wrt_scores_kernel(){
-   // thrust::host_vector<int> keys( scores_array + 1, scores_array + num_vars + 1);
-   // thrust::host_vector<int> values( authorized_caldidates_array + 1, authorized_caldidates_array + num_vars + 1);
    thrust::sort_by_key(scores_array + 1, scores_array + num_vars + 1, authorized_caldidates_array + 1);
-   // thrust::copy(keys.begin(), keys.end(), scores_array + 1);
-   // thrust::copy(values.begin(), values.end(), authorized_caldidates_array + 1);
 }

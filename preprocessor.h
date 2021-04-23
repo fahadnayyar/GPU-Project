@@ -8,10 +8,8 @@
 
 using namespace std;
 
-//* main data structures file
+//* uncomment below line and recompile to print debug messages
 // #define DEBUG
-
-
 
 typedef int Var;
 typedef int Lit;
@@ -31,12 +29,6 @@ public:
    Clause() {};
    
    void print_clause();
-   // {
-   //    for(int i=0; i<num_lits; i++){
-   //       cout << literal_array[i] << " ";
-   //    }
-   //    cout << "\n";
-   // }
    void setNumLits(int n) {num_lits = n;}
    int getNumLits() {return num_lits;}
    int getLit(int index) { return literal_array[index]; }
@@ -49,7 +41,6 @@ public:
 
 class OccurList {
    
-   //*
    int * clause_index_array;
    int occur_list_size = 0;
    int tail = 0;
