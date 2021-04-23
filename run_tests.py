@@ -3,7 +3,7 @@ import os
 def execute_command(cmd):
    print(cmd)
    print()
-   # os.system(cmd)
+   os.system(cmd)
    return
 
 pwd_str = os.getcwd()
@@ -16,16 +16,22 @@ unsat_dir = pwd_str+"test/unsat/"
 for cnf_file in os.listdir(sat_dir):
    if cnf_file.endswith(".cnf"):
       cnf_file_path = sat_dir+cnf_file
-      cmd = "time MODE=1 ./preprocessor " + cnf_file_path
+      os.environ['MODE'] = str(0)
+      cmd = pwd_str+"preprocessor " + cnf_file_path
       execute_command(cmd)
-      cmd = "time MODE=0 ./preprocessor " + cnf_file_path
+      os.environ['MODE'] = str(1)
+      cmd = pwd_str+"preprocessor " + cnf_file_path
       execute_command(cmd)
+
+
       
 for cnf_file in os.listdir(unsat_dir):
    if cnf_file.endswith(".cnf"):
-      cnf_file_path = unsat_dir+cnf_file
-      cmd = "time MODE=1 ./preprocessor " + cnf_file_path
+      cnf_file_path = sat_dir+cnf_file
+      os.environ['MODE'] = str(0)
+      cmd = pwd_str+"preprocessor " + cnf_file_path
       execute_command(cmd)
-      cmd = "time MODE=0 ./preprocessor " + cnf_file_path
+      os.environ['MODE'] = str(1)
+      cmd = pwd_str+"preprocessor " + cnf_file_path
       execute_command(cmd)
       
