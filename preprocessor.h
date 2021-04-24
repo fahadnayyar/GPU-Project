@@ -12,7 +12,7 @@
 using namespace std;
 
 //* uncomment below line and recompile to print debug messages
-#define DEBUG
+// #define DEBUG
 
 //* uncomment below line to print timings of code
 #define ENABLE_TIMER

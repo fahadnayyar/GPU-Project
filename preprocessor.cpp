@@ -269,7 +269,7 @@ void Preprocessor::BVIPE_algorithm() {
    int numResolvents = 0;
    int numDeleted = 0;
 
-   if (mode==0) { //* CPU sequential BVIPE_algorithm
+   // if (mode==0) { //* CPU sequential BVIPE_algorithm
       
       
       for(auto var :elected_candidates_vector) {
@@ -301,12 +301,14 @@ void Preprocessor::BVIPE_algorithm() {
          #endif
 
       }
-   } else if (mode==1) { //* GPU parallel BVIPE_algorithm
-      //* TODO: complete
-   } else {
-      cout << "ERROR: invalid mode in BVIPE_algorithm\n";
-      exit(0);
-   }
+   // } 
+   
+   // else if (mode==1) { //* GPU parallel BVIPE_algorithm
+   //    //* TODO: complete
+   // } else {
+   //    cout << "ERROR: invalid mode in BVIPE_algorithm\n";
+   //    exit(0);
+   // }
 
    #ifdef DEBUG
       cout << "DEBUGGING: BVIPE_algorithm finished.\n" << endl;
@@ -410,7 +412,7 @@ void Preprocessor::printCnfInDimacsFile() {
    char * dimacs_out_file_name = "/removed_vars.cnf\0";
    char * path_to_executable = strcat(cwd1, dimacs_out_file_name);
    FILE * fptr;
-   fptr = fopen(path_to_executable, "a+");
+   fptr = fopen(path_to_executable, "w");
    // int num_clauses;
    // int num_vars;
    int l_num_clauses=0;
@@ -456,19 +458,19 @@ void Preprocessor::printCnfInDimacsFile() {
       
    }
 
-   printf("p cnf %d %d\n", l_num_vars, l_num_clauses);
+   fprintf(fptr,"p cnf %d %d\n", l_num_vars, l_num_clauses);
    for (auto c : remaining_clauses) {
       int c_num_lits = c->getNumLits();
       for (int j=0; j<c_num_lits; j++) {
          int lit = c->getLit(j); 
          if (lit%2 == 0) {  
-            printf("%d ", lit/2);
+            fprintf(fptr,"%d ", lit/2);
          }
          else {  
-            printf("%d ", -((lit/2) + 1));
+            fprintf(fptr,"%d ", -((lit/2) + 1));
          }
       }
-      printf("0\n");
+      fprintf(fptr,"0\n");
    }
 
    for (auto c : resolvents) {
@@ -476,13 +478,13 @@ void Preprocessor::printCnfInDimacsFile() {
       for (int j=0; j<c_num_lits; j++) {
          int lit = c->getLit(j); 
          if (lit%2 == 0) {  
-            printf("%d ", lit/2);
+            fprintf(fptr,"%d ", lit/2);
          }
          else {  
-            printf("%d ", -((lit/2) + 1));
+            fprintf(fptr,"%d ", -((lit/2) + 1));
          }
       }
-      printf("0\n");
+      fprintf(fptr,"0\n");
    }
 
    // fprintf(fptr,"Non Termination due to inline monitoring in mutant_id: %d , Reachable State: tmpvalue = %d, exp = %d\n", mutant_id, *tmpvalue, *exp);

@@ -1,7 +1,11 @@
 preprocessor
 removed_vars.cnf
+temp.txt
+run_edusat_on_all_test_cases.py
 out.txt
 out2.txt
 Edusat/edusat
 Edusat/._assignment.txt
 Edusat/assignment.txt
+out*
+assignment.txt
