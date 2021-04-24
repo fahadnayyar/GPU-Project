@@ -5,10 +5,11 @@ Parallel simplification of SAT on GPUs
 make
 
 ## To run the preprocessor
-MODE=1 ./preprocessor [path-to-dimacs-format-cnf-file] \
+MODE=1 ./preprocessor [path-to-dimacs-format-cnf-file]
 
 
 NOTE1 : The new cnf file with removed variables is dumped in $pwd/removed_vars.cnf 
+
 NOTE 2: Use MODE=0 for CPU (sequential) version. Use MODE=1 for GPU (parallle) version of preprocessor.
 
 ## To check correctness of preprocessor on one cnf input
@@ -16,10 +17,14 @@ Generate the removed_vars.cnf file by executing the preprocessor executable. The
 
 ## To check correctness of preprocessor on all the test CNF cases in this repository
 python3 run_correctness_tests.py \
+
+
 NOTE: the output of speedup tests is stored in correctness_results.txt
 
 ## TO check parallel speedup
 python3 run_speedup_tests.py \
+
+
 NOTE: the output of speedup tests is stored in speedup_results.txt
 
 ### The files authored by us are:
