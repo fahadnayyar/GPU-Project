@@ -390,11 +390,11 @@ int Preprocessor::TautologyLookAhead(int x){
          }
          c1.print_clause();
          c2.print_clause();
-         std::cout << "New Clause: ";
+         // std::cout << "New Clause: ";
          for(auto x: newClause){
-            std::cout << x << " ";
+            // std::cout << x << " ";
          }
-         std::cout << "\n";
+         // std::cout << "\n";
          if(IsTautology(newClause)){
             numTautologies++;
          }
