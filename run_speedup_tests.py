@@ -2,28 +2,32 @@
 
 import os
 
-def execute_command(cmd):
-   print(cmd)
-   print()
-   os.system(cmd)
-   return
-
 pwd_str = os.getcwd()
 if pwd_str[-1]!="/":
    pwd_str += "/"
-sat_dir = pwd_str+"test/sat/"
-unsat_dir = pwd_str+"test/unsat/"
+sat_dir = pwd_str+"tests/sat/"
+unsat_dir = pwd_str+"tests/unsat/"
+speedup_result_file_path = pwd_str+"speedup_results.txt"
 
-# os.chdir(sat_dir)
+def execute_command(cmd):
+   speedup_result_fp = open(speedup_result_file_path,'a+')
+   speedup_result_fp.write("\n")
+   speedup_result_fp.write("COMMAND: " + cmd)
+   speedup_result_fp.close()
+   os.system(cmd)
+   return
+
+cmd = ": > " + speedup_result_file_path
+execute_command(cmd)
+
 for cnf_file in os.listdir(sat_dir):
    if cnf_file.endswith(".cnf"):
       cnf_file_path = sat_dir+cnf_file
-      print("running preprocessing on : " + cnf_file_path)
       os.environ['MODE'] = str(0)
-      cmd = pwd_str+"preprocessor " + cnf_file_path
+      cmd = "timeout 10 " + pwd_str+"preprocessor " + cnf_file_path + " >> " + speedup_result_file_path
       execute_command(cmd)
       os.environ['MODE'] = str(1)
-      cmd = pwd_str+"preprocessor " + cnf_file_path
+      cmd = "timeout 10 " + pwd_str+"preprocessor " + cnf_file_path + " >> " + speedup_result_file_path
       execute_command(cmd)
 
 
@@ -31,11 +35,10 @@ for cnf_file in os.listdir(sat_dir):
 for cnf_file in os.listdir(unsat_dir):
    if cnf_file.endswith(".cnf"):
       cnf_file_path = sat_dir+cnf_file
-      print("running preprocessing on : " + cnf_file_path)
       os.environ['MODE'] = str(0)
-      cmd = pwd_str+"preprocessor " + cnf_file_path
+      cmd = "timeout 10 " + pwd_str+"preprocessor " + cnf_file_path + " >> " + speedup_result_file_path
       execute_command(cmd)
       os.environ['MODE'] = str(1)
-      cmd = pwd_str+"preprocessor " + cnf_file_path
+      cmd = "timeout 10 " + pwd_str+"preprocessor " + cnf_file_path + " >> " + speedup_result_file_path
       execute_command(cmd)
       

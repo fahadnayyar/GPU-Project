@@ -65,9 +65,10 @@ int main ( int argc, char **argv	) {
 		#ifdef ENABLE_TIMER
 			clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_cpu);
 			msecs_cpu = 1000.0 * (end_cpu.tv_sec - start_cpu.tv_sec) + (end_cpu.tv_nsec - start_cpu.tv_nsec)/1000000.0;
-			cout<<"CPU sequential sat simplification done in "<<msecs_cpu<<" milliseconds.\n"<<flush;
+			// cout<<"CPU sequential sat simplification done in "<<msecs_cpu<<" milliseconds.\n"<<flush;
+			cout<<"CPU TIME:  "<<msecs_cpu<<" milliseconds.\n";
 		#else
-			cout<<"CPU sequential sat simplification done.\n"<<flush;
+			cout<<"CPU sequential sat simplification done.\n";
 		#endif
 	}else if (P.getMode()==1){
 		#ifdef ENABLE_TIMER
@@ -84,9 +85,10 @@ int main ( int argc, char **argv	) {
 			cudaEventElapsedTime(&msecs_gpu, start_gpu, end_gpu);
 			cudaEventDestroy(start_gpu);
 			cudaEventDestroy(end_gpu);
-			cout<<"GPU parallel sat simplification done in "<<msecs_gpu<<" milliseconds.\n";
+			// cout<<"GPU parallel sat simplification done in "<<msecs_gpu<<" milliseconds.\n";
+			cout<<"GPU TIME:  "<<msecs_gpu<<" milliseconds.\n";
 		#else
-			cout<<"GPU parallel sat simplification done.\n"<<flush;
+			cout<<"GPU parallel sat simplification done.\n";
 		#endif
 	}
 	
@@ -185,7 +187,7 @@ void read_cnf(ifstream& in) {
 			break;
 		}
 	}	
-	cout << "Read " << P.cnf_size() << " clauses in " << cpuTime() - begin_time << " secs." << endl << "Solving..." << endl;
+	// cout << "Read " << P.cnf_size() << " clauses in " << cpuTime() - begin_time << " secs." << endl << "Solving..." << endl;
 }
 
 

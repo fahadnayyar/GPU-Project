@@ -81,7 +81,7 @@ extern "C" void run_assign_scores_kernel ( int * authorized_caldidates_array,
    cudaEventElapsedTime(&msecs_gpu_1, start_gpu_1, end_gpu_1);
    cudaEventDestroy(start_gpu_1);
    cudaEventDestroy(end_gpu_1);
-   std::cout<<"\nassign_scores_kernel done in "<<msecs_gpu_1<<" milliseconds.\n";
+   std::cout<<"assign_scores_kernel done in "<<msecs_gpu_1<<" milliseconds.\n";
 
 
    cudaMemcpy ( (void*) authorized_caldidates_array, 
@@ -117,7 +117,7 @@ void Preprocessor::run_create_histogram_array_kernel() {
    cudaEventElapsedTime(&msecs_gpu_1, start_gpu_1, end_gpu_1);
    cudaEventDestroy(start_gpu_1);
    cudaEventDestroy(end_gpu_1);
-   std::cout<<"\nrun_create_histogram_array_kernel done in "<<msecs_gpu_1<<" milliseconds.\n";
+   std::cout<<"run_create_histogram_array_kernel done in "<<msecs_gpu_1<<" milliseconds.\n";
 
 }
 
@@ -133,5 +133,5 @@ void Preprocessor::run_sort_wrt_scores_kernel(){
    cudaEventElapsedTime(&msecs_gpu_1, start_gpu_1, end_gpu_1);
    cudaEventDestroy(start_gpu_1);
    cudaEventDestroy(end_gpu_1);
-   std::cout<<"\nrun_sort_wrt_scores_kernel done in "<<msecs_gpu_1<<" milliseconds.\n";
+   std::cout<<"run_sort_wrt_scores_kernel done in "<<msecs_gpu_1<<" milliseconds.\n";
 }

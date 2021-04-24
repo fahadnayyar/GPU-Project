@@ -388,8 +388,8 @@ int Preprocessor::TautologyLookAhead(int x){
             if(c2.getLit(k) != index_p && c2.getLit(k) != index_n)
                newClause.insert(c2.getLit(k));
          }
-         c1.print_clause();
-         c2.print_clause();
+         // c1.print_clause();
+         // c2.print_clause();
          // std::cout << "New Clause: ";
          for(auto x: newClause){
             // std::cout << x << " ";
