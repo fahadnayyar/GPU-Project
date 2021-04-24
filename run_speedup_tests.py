@@ -34,7 +34,7 @@ for cnf_file in os.listdir(sat_dir):
       
 for cnf_file in os.listdir(unsat_dir):
    if cnf_file.endswith(".cnf"):
-      cnf_file_path = sat_dir+cnf_file
+      cnf_file_path = unsat_dir+cnf_file
       os.environ['MODE'] = str(0)
       cmd = "timeout 10 " + pwd_str+"preprocessor " + cnf_file_path + " >> " + speedup_result_file_path
       execute_command(cmd)
