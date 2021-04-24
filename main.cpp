@@ -1,3 +1,5 @@
+// @author: Krishna Kariya, Fahad Nayyar, 2021
+
 //* TODO: free all data structures before exit !!
 //* TODO: add timing code in the implementation itself. Also calculate per kernel time
 

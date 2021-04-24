@@ -1,3 +1,6 @@
+/* @author: Krishna Kariya, Fahad Nayyar, 2021
+ */
+
 #include <iostream>
 #include <fstream>
 #include <ctime>
@@ -9,7 +12,7 @@
 using namespace std;
 
 //* uncomment below line and recompile to print debug messages
-// #define DEBUG
+#define DEBUG
 
 //* uncomment below line to print timings of code
 #define ENABLE_TIMER
@@ -133,7 +136,7 @@ class Preprocessor {
    int num_clauses;
 
    //* hyper-parameter TODO: decide mu's valuse
-   int mu = 11;
+   int mu = 16;
    int cutoffpoint;
    int mode = 0;
 
@@ -181,6 +184,8 @@ public:
    bool IsTautology(set<int> Clause);
    int TautologyLookAhead(int x);
 
+   void printCnfInDimacsFile();
+   
    void setNumVars(int s){ num_vars = s;}
    int getNumVars(){ return num_vars; }
    // void read_cnf(ifstream& in);

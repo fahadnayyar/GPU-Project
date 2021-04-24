@@ -1,5 +1,11 @@
+/* @author: Krishna Kariya, Fahad Nayyar, 2021
+*/
+
 #include "preprocessor.h"
-#include "preprocessor_kernels.h"
+// #include "preprocessor_kernels.h"
+#include <unistd.h>
+#include <stdio.h>
+#include <limits.h>
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -13,7 +19,8 @@ void Preprocessor::do_parallel_preprocessing() {
    constructAGPU();  
    createOccurTable();
    LCVE_algorithm();
-   // BVIPE_algorithm();
+   BVIPE_algorithm();
+   printCnfInDimacsFile();
 }
 
 // * Algorithm 1
@@ -255,6 +262,9 @@ void Preprocessor::createOccurTable() {
 void Preprocessor::BVIPE_algorithm() {
    
    eliminated_array = new bool[getNumVars()];
+   for (int i=0; i<getNumVars(); i++) {
+      eliminated_array[i] = false;
+   }
    int numTautologies = 0;
    int numResolvents = 0;
    int numDeleted = 0;
@@ -280,6 +290,16 @@ void Preprocessor::BVIPE_algorithm() {
                eliminated_array[var] = true;
             }
          }
+        
+         #ifdef DEBUG
+            cout << "var: " << var << endl;
+            cout << " histogram_array[index_p] :" <<  histogram_array[index_p] << endl;
+            cout << " histogram_array[index_n] :" <<  histogram_array[index_n] << endl;
+            cout << "numTautologies : " << numTautologies << endl;
+            cout << "numResolvents : " << numResolvents << endl;
+            cout << "numDeleted : " << numDeleted << endl;
+         #endif
+
       }
    } else if (mode==1) { //* GPU parallel BVIPE_algorithm
       //* TODO: complete
@@ -290,9 +310,6 @@ void Preprocessor::BVIPE_algorithm() {
 
    #ifdef DEBUG
       cout << "DEBUGGING: BVIPE_algorithm finished.\n" << endl;
-      cout << "numTautologies : " << numTautologies << endl;
-      cout << "numResolvents : " << numResolvents << endl;
-      cout << "numDeleted : " << numDeleted << endl;
       print_eliminated_array();
    #endif
 
@@ -312,14 +329,17 @@ void Preprocessor::Resolve(int x){
          Clause& c2 = cnf->getClause(c2_ind);
          set < int > newClause;
          for(int k=0; k<c1.getNumLits(); k++){
-            newClause.insert(c1.getLit(k));
+            if(c1.getLit(k) != index_p && c1.getLit(k) != index_n)
+               newClause.insert(c1.getLit(k));
          }
          for(int k=0; k<c2.getNumLits(); k++){
-            newClause.insert(c2.getLit(k));
+            if(c2.getLit(k) != index_p && c2.getLit(k) != index_n)
+               newClause.insert(c2.getLit(k));
          }
          if(!IsTautology(newClause)){
             Clause* c = new Clause();
-            c->setNumLits(c1.getNumLits() + c2.getNumLits() - 2);
+            c->setNumLits(newClause.size());
+            c->initializeArray();
             int k=0;
             for(auto lit: newClause){
                c->setLit(k, lit);
@@ -350,7 +370,7 @@ int Preprocessor::TautologyLookAhead(int x){
    int numTautologies = 0;
    OccurList& occur_list_p = occur_table->getOccurList(index_p);
    OccurList& occur_list_n = occur_table->getOccurList(index_n);
-   vector< Clause *> resolvents;
+   // vector< Clause *> resolvents;
    for(int i=0; i< occur_list_p.getOccurListSize(); i++ ){
       for(int j=0; j< occur_list_n.getOccurListSize(); j++ ){
          int c1_ind = occur_list_p.getClauseIndex(i);
@@ -359,17 +379,114 @@ int Preprocessor::TautologyLookAhead(int x){
          Clause& c2 = cnf->getClause(c2_ind);
          set < int > newClause;
          for(int k=0; k<c1.getNumLits(); k++){
-            newClause.insert(c1.getLit(k));
+            if(c1.getLit(k) != index_p && c1.getLit(k) != index_n)
+               newClause.insert(c1.getLit(k));
          }
          for(int k=0; k<c2.getNumLits(); k++){
-            newClause.insert(c2.getLit(k));
+            if(c2.getLit(k) != index_p && c2.getLit(k) != index_n)
+               newClause.insert(c2.getLit(k));
          }
-         if(!IsTautology(newClause)){
+         c1.print_clause();
+         c2.print_clause();
+         std::cout << "New Clause: ";
+         for(auto x: newClause){
+            std::cout << x << " ";
+         }
+         std::cout << "\n";
+         if(IsTautology(newClause)){
             numTautologies++;
          }
       }
    }
    return numTautologies;
+}
+
+
+//***--------------------------dimacs-file-print-function------------------------------------------------***
+
+void Preprocessor::printCnfInDimacsFile() {
+   char cwd1[1000];
+   getcwd(cwd1, sizeof(cwd1));
+   char * dimacs_out_file_name = "/removed_vars.cnf\0";
+   char * path_to_executable = strcat(cwd1, dimacs_out_file_name);
+   FILE * fptr;
+   fptr = fopen(path_to_executable, "a+");
+   // int num_clauses;
+   // int num_vars;
+   int l_num_clauses=0;
+   vector<Clause*> remaining_clauses;
+   for (int i=0; i<num_clauses;i++) {
+      Clause & c = cnf->getClause(i);
+      if (!c.getDeletedFlag()) {
+         l_num_clauses++;
+         remaining_clauses.push_back(&c);
+      }
+   }
+   l_num_clauses += resolvents.size();
+   int l_num_vars = num_vars;
+   int var = num_vars;
+   for (int i=0; i<num_vars; i++){
+      if (eliminated_array[i]){
+         l_num_vars--;
+      
+         for (auto c : remaining_clauses) {
+            int c_num_lits = c->getNumLits();
+            for (int j=0; j<c_num_lits; j++) {
+               if (c->getLit(j)==2*var) {
+                  c->setLit(j, 2*i);
+               } else if (c->getLit(j)==2*var-1) {
+                  c->setLit(j, 2*i-1);
+               }
+            }
+         }
+        
+         for (auto c : resolvents) {
+            int c_num_lits = c->getNumLits();
+            for (int j=0; j<c_num_lits; j++) {
+               if (c->getLit(j)==2*var) {
+                  c->setLit(j, 2*i);
+               } else if (c->getLit(j)==2*var-1) {
+                  c->setLit(j, 2*i-1);
+               }
+            }
+         }
+
+         var--;
+      }
+      
+   }
+
+   printf("p cnf %d %d\n", l_num_vars, l_num_clauses);
+   for (auto c : remaining_clauses) {
+      int c_num_lits = c->getNumLits();
+      for (int j=0; j<c_num_lits; j++) {
+         int lit = c->getLit(j); 
+         if (lit%2 == 0) {  
+            printf("%d ", lit/2);
+         }
+         else {  
+            printf("%d ", -((lit/2) + 1));
+         }
+      }
+      printf("0\n");
+   }
+
+   for (auto c : resolvents) {
+      int c_num_lits = c->getNumLits();
+      for (int j=0; j<c_num_lits; j++) {
+         int lit = c->getLit(j); 
+         if (lit%2 == 0) {  
+            printf("%d ", lit/2);
+         }
+         else {  
+            printf("%d ", -((lit/2) + 1));
+         }
+      }
+      printf("0\n");
+   }
+
+   // fprintf(fptr,"Non Termination due to inline monitoring in mutant_id: %d , Reachable State: tmpvalue = %d, exp = %d\n", mutant_id, *tmpvalue, *exp);
+
 }
 
 
@@ -428,6 +545,7 @@ void Preprocessor::print_elected_candidates_vector() {
 
 void Preprocessor::print_eliminated_array() {
    cout << "DEBUGGING: eliminated_array: \n";
+   cout << "getNumVars(): " << getNumVars() << endl;
    for (int i=0;i<getNumVars();i++){
       cout << eliminated_array[i] << ", \n";
    }
